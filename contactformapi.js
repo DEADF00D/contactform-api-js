@@ -1,7 +1,7 @@
 let RapidAPI_Key = document.currentScript.getAttribute('data-contactformapi-rapidapi-key');
 
 function loadCaptcha(f){
-    fetch('https://contact-form4.p.rapidapi.com/captcha', {
+    fetch('https://contact-form4.p.rapidapi.com/api/v1/captcha', {
         method: 'post',
         headers: {
             'Accept': 'application/json, text/plain, */*',
@@ -95,7 +95,7 @@ window.addEventListener('load', () => {
 
             var captcha_input = document.querySelector("input[data-contactformapi-captcha-uid]");
 
-            fetch('https://contact-form4.p.rapidapi.com/submit', {
+            fetch('https://contact-form4.p.rapidapi.com/api/v1/submit', {
                 method: 'post',
                 headers: {
                     'Accept': 'application/json, text/plain, */*',
@@ -125,9 +125,11 @@ window.addEventListener('load', () => {
                 else if(res.success){
                     errorCaptcha(f, '');
                     formCallSuccess(f, res);
+                    loadCaptcha(f);
                 }
             }).catch(res => {
                 formCallError(f, res);
+                loadCaptcha(f);
             });
 
             captcha_input.value = '';
