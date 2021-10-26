@@ -1,9 +1,15 @@
+let RapidAPI_Key = document.currentScript.getAttribute('data-contactformapi-rapidapi-key');
+
+console.log(RapidAPI_Key);
+
 function loadCaptcha(f){
-    fetch('http://127.0.0.1:5000/captcha', {
+    fetch('https://contact-form4.p.rapidapi.com/captcha', {
         method: 'post',
         headers: {
             'Accept': 'application/json, text/plain, */*',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'x-rapidapi-host': 'contact-form4.p.rapidapi.com',
+		    'x-rapidapi-key': RapidAPI_Key
         },
         body: JSON.stringify({ 'uid': f.getAttribute('data-contactformapi') })
     })
@@ -12,15 +18,20 @@ function loadCaptcha(f){
         if(!res.success){ return; }
 
         var e = f.querySelector("*[data-contactformapi-captcha]");
-        e.querySelector("img").src = `data:image/png;base64,${ res.image }`
+        e.querySelector("img").src = `data:image/png;base64,${ res.image }`;
         e.querySelector("input[data-contactformapi-captcha-uid]").setAttribute("data-contactformapi-captcha-uid", res.uid);
+    })
+    .catch(res => {
+        var captcha_div = getCaptchaElementForm(f);
+        captcha_div.parentNode.removeChild(captcha_div);
+        formCallError(f, res);
     });
 }
 
-function createCaptcha(f){
-    var submit = f.querySelector("button[type='submit'], input[type='submit']");
+function getCaptchaElementForm(f){
+    var captcha_div;
 
-    var captcha_div_specified = document.querySelector("*[data-contactformapi-captcha]");
+    var captcha_div_specified = f.querySelector("*[data-contactformapi-captcha]");
     if(captcha_div_specified){
         captcha_div = captcha_div_specified;
     }else{
@@ -28,14 +39,21 @@ function createCaptcha(f){
         captcha_div.setAttribute('data-contactformapi-captcha', 'true');
     }
 
+    return captcha_div;
+}
+
+function createCaptcha(f){
+    var submit = f.querySelector("button[type='submit'], input[type='submit']");
+    var captcha_div = getCaptchaElementForm(f);
+
     captcha_div.style = 'width:200px; padding:5px; border: 1px solid #ddd; border-radius: 5px;';
     captcha_div.innerHTML = `
-        <img src = "c" style="width: 100%; height: auto;" />
-        <input data-contactformapi-captcha-uid = "hello" style="width: calc(100% - 15px);border: 1px solid #ddd;padding: 6px;" placeholder="Type caracters" />
+        <img src = "#" style="width: 100%; height: auto;" />
+        <input data-contactformapi-captcha-uid = "hello" style="width: calc(100% - 15px);border: 1px solid #ddd;padding: 6px;" placeholder="Type characters" />
         <span style="color:#f44336; font-size: 12px;" data-contactformapi-error = "true"></span>
     `;
 
-    if(!captcha_div_specified){
+    if(!f.querySelector("*[data-contactformapi-captcha]")){
         submit.parentNode.insertBefore(captcha_div, submit);
     }
 }
@@ -43,6 +61,20 @@ function createCaptcha(f){
 function errorCaptcha(f, error){
     var e = document.querySelector("*[data-contactformapi-captcha] span[data-contactformapi-error]");
     e.innerText = error;
+}
+
+function formCallSuccess(f, res){
+    var onsuccess = f.getAttribute('data-contactformapi-onsuccess');
+    if(onsuccess && window[onsuccess]){
+        window[onsuccess](f, res);
+    }
+}
+
+function formCallError(f, res){
+    var onerror = f.getAttribute('data-contactformapi-onerror');
+    if(onerror && window[onerror]){
+        window[onerror](f, res);
+    }
 }
 
 window.addEventListener('load', () => {
@@ -65,11 +97,13 @@ window.addEventListener('load', () => {
 
             var captcha_input = document.querySelector("input[data-contactformapi-captcha-uid]");
 
-            fetch('http://127.0.0.1:5000/submit', {
+            fetch('https://contact-form4.p.rapidapi.com/submit', {
                 method: 'post',
                 headers: {
                     'Accept': 'application/json, text/plain, */*',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'x-rapidapi-host': 'contact-form4.p.rapidapi.com',
+        		    'x-rapidapi-key': RapidAPI_Key
                 },
                 body: JSON.stringify({
                     'captcha-uid': captcha_input.getAttribute("data-contactformapi-captcha-uid"),
@@ -88,18 +122,14 @@ window.addEventListener('load', () => {
                         loadCaptcha(f);
                     }
 
-                    var onerror = f.getAttribute('data-contactformapi-onerror');
-                    if(onerror && window[onerror]){
-                        window[onerror](f, res);
-                    }
+                    formCallError(f, res);
                 }
                 else if(res.success){
                     errorCaptcha(f, '');
-                    var onsuccess = f.getAttribute('data-contactformapi-onsuccess');
-                    if(onsuccess && window[onsuccess]){
-                        window[onsuccess](f, res);
-                    }
+                    formCallSuccess(f, res);
                 }
+            }).catch(res => {
+                formCallError(f, res);
             });
 
             captcha_input.value = '';
