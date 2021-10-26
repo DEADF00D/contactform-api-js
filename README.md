@@ -8,7 +8,7 @@ To work, **ContactForm API** need you to import the `contactformapi.min.js` java
 It will take care of captcha generation, captcha element and form submissions automatically and weight **only 2.5kb**.  
 You can include it with:
 ```
-<script src="hello" type="text/javascript" data-contactformapi-rapidapi-key="API_KEY">
+<script src="https://cdn.jsdelivr.net/gh/DEADF00D/contactform-api-js@main/contactformapi.min.js" type="text/javascript" data-contactformapi-rapidapi-key="API_KEY"></script>
 ```
 Remember to replace `API_KEY` by your RapidAPI API key.
 
